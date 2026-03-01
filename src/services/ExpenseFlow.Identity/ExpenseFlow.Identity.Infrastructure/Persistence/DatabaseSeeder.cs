@@ -11,18 +11,16 @@ using ExpenseFlow.Identity.Infrastructure.Persistence;
 namespace ExpenseFlow.Identity.Infrastructure.Persistence;
 
 /// <summary>
-/// Runs once at startup in Development/Staging to ensure the DB is migrated
-/// and seeded with a default admin account.
-/// Never runs in Production — guarded by environment check.
+/// Runs once at startup in Development/Staging to seed an admin user.
+/// Uses IHostedService so it executes after DI is built but before traffic is served.
+/// Never seeds in Production — guarded by environment check.
 /// </summary>
 public sealed class DatabaseSeeder : IHostedService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<DatabaseSeeder> _logger;
 
-    public DatabaseSeeder(
-        IServiceScopeFactory scopeFactory,
-        ILogger<DatabaseSeeder> logger)
+    public DatabaseSeeder(IServiceScopeFactory scopeFactory, ILogger<DatabaseSeeder> logger)
     {
         _scopeFactory = scopeFactory;
         _logger       = logger;
@@ -30,11 +28,11 @@ public sealed class DatabaseSeeder : IHostedService
 
     public async Task StartAsync(CancellationToken ct)
     {
-        using var scope   = _scopeFactory.CreateScope();
-        var context       = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await using var scope   = _scopeFactory.CreateAsyncScope();
+        var context             = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var passwordHasher      = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
-        _logger.LogInformation("Applying pending migrations…");
+        _logger.LogInformation("Applying pending EF Core migrations...");
         await context.Database.MigrateAsync(ct);
 
         if (await context.Users.AnyAsync(ct))
@@ -43,20 +41,20 @@ public sealed class DatabaseSeeder : IHostedService
             return;
         }
 
-        _logger.LogInformation("Seeding default admin user…");
+        _logger.LogInformation("Seeding admin user...");
 
-        var adminEmail = Email.Create("admin@expenseflow.local");
-        var admin = User.Create(
+        var adminEmail = Email.Create("admin@expenseflow.com");
+        var admin      = User.Create(
             adminEmail,
-            "System",
-            "Admin",
-            passwordHasher.Hash("Admin@12345!"),
-            UserRole.Admin);
+            firstName:    "ExpenseFlow",
+            lastName:     "Admin",
+            passwordHash: passwordHasher.Hash("Admin@12345!"),
+            role:         UserRole.Admin);
 
         await context.Users.AddAsync(admin, ct);
         await context.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Default admin seeded with email: {Email}", adminEmail.Value);
+        _logger.LogInformation("Admin user seeded successfully (ID: {UserId})", admin.Id);
     }
 
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
