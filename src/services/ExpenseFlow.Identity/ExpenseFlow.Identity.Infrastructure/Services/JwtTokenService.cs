@@ -11,9 +11,9 @@ using ExpenseFlow.Identity.Infrastructure.Settings;
 namespace ExpenseFlow.Identity.Infrastructure.Services;
 
 /// <summary>
-/// Generates a short-lived JWT access token + a long-lived cryptographically random refresh token.
-/// Access token: signed HS256, expires in JwtSettings.ExpiryMinutes (default 15 min).
-/// Refresh token: 64-byte random base64 string, expiry tracked in the User aggregate.
+/// Generates a short-lived JWT access token and a long-lived opaque refresh token.
+/// Access token: 15 minutes, signed with HMAC-SHA256.
+/// Refresh token: 7 days, cryptographically random (not a JWT).
 /// </summary>
 public sealed class JwtTokenService : IJwtTokenService
 {
@@ -24,7 +24,19 @@ public sealed class JwtTokenService : IJwtTokenService
 
     public (string AccessToken, string RefreshToken, DateTime ExpiresAt) GenerateTokens(User user)
     {
-        var expiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes);
+        var accessToken  = BuildAccessToken(user);
+        var refreshToken = BuildRefreshToken();
+        var expiresAt    = DateTime.UtcNow.AddDays(_settings.RefreshTokenExpiryDays);
+
+        return (accessToken, refreshToken, expiresAt);
+    }
+
+    // ── private helpers ────────────────────────────────────────────────────────
+
+    private string BuildAccessToken(User user)
+    {
+        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
         {
@@ -35,23 +47,22 @@ public sealed class JwtTokenService : IJwtTokenService
             new Claim(ClaimTypes.Role,               user.Role.ToString()),
         };
 
-        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
         var token = new JwtSecurityToken(
             issuer:             _settings.Issuer,
             audience:           _settings.Audience,
             claims:             claims,
-            expires:            expiresAt,
+            notBefore:          DateTime.UtcNow,
+            expires:            DateTime.UtcNow.AddMinutes(_settings.AccessTokenExpiryMinutes),
             signingCredentials: creds);
 
-        var accessToken  = new JwtSecurityTokenHandler().WriteToken(token);
-        var refreshToken = GenerateRefreshToken();
-
-        return (accessToken, refreshToken, expiresAt);
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private static string GenerateRefreshToken()
+    /// <summary>
+    /// Refresh token is a plain random byte string — NOT a JWT.
+    /// Storing it hashed in the DB is a future hardening step.
+    /// </summary>
+    private static string BuildRefreshToken()
     {
         var bytes = RandomNumberGenerator.GetBytes(64);
         return Convert.ToBase64String(bytes);
