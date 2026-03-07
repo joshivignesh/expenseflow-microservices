@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ExpenseFlow.Expense.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="FluentValidation" Version="11.9.2" />
+    <PackageReference Include="Dapper" Version="2.1.28" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Domain brings in Shared transitively -->
+    <ProjectReference Include="../ExpenseFlow.Expense.Domain/ExpenseFlow.Expense.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
