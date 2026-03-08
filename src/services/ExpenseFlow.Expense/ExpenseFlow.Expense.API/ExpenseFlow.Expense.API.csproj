@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ExpenseFlow.Expense.API</RootNamespace>
+    <AssemblyName>ExpenseFlow.Expense.API</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- JWT Bearer authentication middleware -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.2" />
+
+    <!-- SQL Server driver needed for Dapper IDbConnection registration -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
+
+    <!-- Swagger / OpenAPI -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Infrastructure brings Application → Domain → Shared transitively -->
+    <ProjectReference Include="../ExpenseFlow.Expense.Infrastructure/ExpenseFlow.Expense.Infrastructure.csproj" />
+
+    <!-- Application layer needed directly for MediatR handler registration -->
+    <ProjectReference Include="../ExpenseFlow.Expense.Application/ExpenseFlow.Expense.Application.csproj" />
+  </ItemGroup>
+
+</Project>
