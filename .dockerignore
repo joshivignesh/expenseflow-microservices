@@ -1,0 +1,28 @@
+# Build output
+**/bin/
+**/obj/
+
+# IDE and OS
+**/.vs/
+**/.vscode/
+**/.idea/
+**/.DS_Store
+**/Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Secrets — never bake into images
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/user-secrets/
+
+# Docker itself
+docker-compose*.yml
+Dockerfile
+
+# Docs and test results
+**/TestResults/
+**/*.md
+docs/

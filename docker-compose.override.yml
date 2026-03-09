@@ -1,0 +1,41 @@
+# =============================================================================
+# docker-compose.override.yml — Development overrides
+# Automatically merged with docker-compose.yml when you run docker-compose up.
+#
+# Differences from production:
+#   - ASPNETCORE_ENVIRONMENT = Development  (enables Swagger UI at /)
+#   - Swagger ports exposed
+#   - Relaxed SQL password requirements for local dev
+#   - Hot-reload friendly volume mounts (optional)
+# =============================================================================
+
+version: '3.9'
+
+services:
+
+  sqlserver:
+    environment:
+      SA_PASSWORD: "Dev_P@ssw0rd123!"   # overrides .env for local dev
+
+  identity-service:
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__IdentityDb: "Server=sqlserver;Database=ExpenseFlowIdentityDb;User Id=sa;Password=Dev_P@ssw0rd123!;TrustServerCertificate=True;"
+      JwtSettings__SecretKey: "dev-only-secret-key-min-32-chars!!"
+      JwtSettings__Issuer: "ExpenseFlow.Identity"
+      JwtSettings__Audience: "ExpenseFlow.Client"
+      JwtSettings__ExpiryMinutes: "60"  # longer expiry for dev convenience
+    ports:
+      - "5001:8080"  # Swagger UI at http://localhost:5001
+
+  expense-service:
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__ExpenseDb: "Server=sqlserver;Database=ExpenseFlowExpenseDb;User Id=sa;Password=Dev_P@ssw0rd123!;TrustServerCertificate=True;"
+      JwtSettings__SecretKey: "dev-only-secret-key-min-32-chars!!"
+      JwtSettings__Issuer: "ExpenseFlow.Identity"
+      JwtSettings__Audience: "ExpenseFlow.Client"
+    ports:
+      - "5002:8080"  # Swagger UI at http://localhost:5002
