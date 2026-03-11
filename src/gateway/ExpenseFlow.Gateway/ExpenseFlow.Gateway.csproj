@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ExpenseFlow.Gateway</RootNamespace>
+    <AssemblyName>ExpenseFlow.Gateway</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- YARP reverse proxy -->
+    <PackageReference Include="Yarp.ReverseProxy" Version="2.1.0" />
+
+    <!-- Rate limiting (built into ASP.NET 8, no extra package needed) -->
+    <!-- AspNetCoreRateLimit kept for advanced per-client policies if needed later -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.2" />
+  </ItemGroup>
+
+</Project>

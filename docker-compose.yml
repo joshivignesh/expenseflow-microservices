@@ -1,16 +1,16 @@
 # =============================================================================
 # ExpenseFlow — docker-compose.yml
-# Production-parity orchestration for all services.
+# Full stack: SQL Server + Identity + Expense + API Gateway
 #
-# Services:
-#   sqlserver        — SQL Server 2022 (shared DB host, separate databases)
-#   identity-service — ExpenseFlow.Identity.API  (port 5001)
-#   expense-service  — ExpenseFlow.Expense.API   (port 5002)
+# External entry point: http://localhost:5000  (Gateway)
+# Internal ports (direct access for dev/debug):
+#   Identity  → http://localhost:5001
+#   Expense   → http://localhost:5002
 #
 # Usage:
-#   docker-compose up --build          # first run
-#   docker-compose up -d               # detached
-#   docker-compose down -v             # tear down including volumes
+#   docker-compose up --build
+#   docker-compose up -d
+#   docker-compose down -v
 # =============================================================================
 
 version: '3.9'
@@ -19,10 +19,6 @@ services:
 
   # ---------------------------------------------------------------------------
   # SQL Server 2022
-  # Both microservices connect to the same SQL host but use separate databases:
-  #   ExpenseFlowIdentityDb  — owned by Identity Service
-  #   ExpenseFlowExpenseDb   — owned by Expense Service
-  # In production these would be separate SQL instances or Azure SQL databases.
   # ---------------------------------------------------------------------------
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -48,8 +44,6 @@ services:
 
   # ---------------------------------------------------------------------------
   # Identity Service
-  # Handles registration, login, JWT issuance.
-  # Depends on sqlserver being healthy before starting.
   # ---------------------------------------------------------------------------
   identity-service:
     build:
@@ -72,11 +66,15 @@ services:
     networks:
       - expenseflow-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   # ---------------------------------------------------------------------------
   # Expense Service
-  # Handles expense lifecycle. Validates JWTs issued by Identity Service.
-  # Shares the same JWT secret so tokens are trusted cross-service.
   # ---------------------------------------------------------------------------
   expense-service:
     build:
@@ -94,6 +92,40 @@ services:
       - "5002:8080"
     depends_on:
       sqlserver:
+        condition: service_healthy
+    networks:
+      - expenseflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # API Gateway (YARP)
+  # Single entry point for all external traffic.
+  # Waits for both services to be healthy before starting.
+  # ---------------------------------------------------------------------------
+  gateway:
+    build:
+      context: .
+      dockerfile: src/gateway/ExpenseFlow.Gateway/Dockerfile
+    container_name: expenseflow-gateway
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "http://+:8080"
+      JwtSettings__SecretKey: "${JWT_SECRET_KEY}"
+      JwtSettings__Issuer: "ExpenseFlow.Identity"
+      JwtSettings__Audience: "ExpenseFlow.Client"
+      Cors__AllowedOrigins__0: "${FRONTEND_ORIGIN:-http://localhost:3000}"
+    ports:
+      - "5000:8080"   # THE only port the frontend / client should call
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      expense-service:
         condition: service_healthy
     networks:
       - expenseflow-network
