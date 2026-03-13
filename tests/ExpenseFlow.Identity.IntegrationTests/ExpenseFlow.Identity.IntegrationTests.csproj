@@ -5,21 +5,22 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
+    <RootNamespace>ExpenseFlow.Identity.IntegrationTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Test framework -->
-    <PackageReference Include="xunit" Version="2.7.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7">
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
 
-    <!-- Real SQL Server container spun up per test collection -->
-    <PackageReference Include="Testcontainers.MsSql" Version="3.8.0" />
+    <!-- Spins up a real SQL Server container for each test run -->
+    <PackageReference Include="Testcontainers.MsSql" Version="3.9.0" />
 
-    <!-- ASP.NET Core in-process test host -->
+    <!-- Hosts the full ASP.NET Core pipeline in-process -->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.2" />
   </ItemGroup>
 

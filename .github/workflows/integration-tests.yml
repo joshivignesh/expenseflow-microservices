@@ -1,9 +1,3 @@
-# =============================================================================
-# Integration Test Pipeline
-# Runs on every PR and push to main.
-# Spins up real SQL Server via Testcontainers (Docker-in-Docker on ubuntu runner).
-# =============================================================================
-
 name: Integration Tests
 
 on:
@@ -14,7 +8,7 @@ on:
 
 jobs:
   identity-integration-tests:
-    name: Identity Service Integration Tests
+    name: Identity Service — Integration Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -25,29 +19,24 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore
-        run: dotnet restore tests/ExpenseFlow.Identity.IntegrationTests/ExpenseFlow.Identity.IntegrationTests.csproj
-
-      - name: Build
-        run: dotnet build tests/ExpenseFlow.Identity.IntegrationTests/ExpenseFlow.Identity.IntegrationTests.csproj --no-restore -c Release
-
-      - name: Run Tests
+      # Docker is pre-installed on ubuntu-latest — Testcontainers uses it to spin up SQL Server
+      - name: Run Identity Integration Tests
         run: |
           dotnet test tests/ExpenseFlow.Identity.IntegrationTests/ExpenseFlow.Identity.IntegrationTests.csproj \
-            --no-build -c Release \
+            --configuration Release \
             --logger "trx;LogFileName=identity-results.trx" \
-            --results-directory ./test-results
+            --results-directory ./TestResults
 
       - name: Publish Test Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Identity Integration Test Results
-          path: test-results/identity-results.trx
+          path: TestResults/identity-results.trx
           reporter: dotnet-trx
 
   expense-integration-tests:
-    name: Expense Service Integration Tests
+    name: Expense Service — Integration Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -58,23 +47,17 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore
-        run: dotnet restore tests/ExpenseFlow.Expense.IntegrationTests/ExpenseFlow.Expense.IntegrationTests.csproj
-
-      - name: Build
-        run: dotnet build tests/ExpenseFlow.Expense.IntegrationTests/ExpenseFlow.Expense.IntegrationTests.csproj --no-restore -c Release
-
-      - name: Run Tests
+      - name: Run Expense Integration Tests
         run: |
           dotnet test tests/ExpenseFlow.Expense.IntegrationTests/ExpenseFlow.Expense.IntegrationTests.csproj \
-            --no-build -c Release \
+            --configuration Release \
             --logger "trx;LogFileName=expense-results.trx" \
-            --results-directory ./test-results
+            --results-directory ./TestResults
 
       - name: Publish Test Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Expense Integration Test Results
-          path: test-results/expense-results.trx
+          path: TestResults/expense-results.trx
           reporter: dotnet-trx
