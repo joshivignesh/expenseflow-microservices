@@ -1,0 +1,89 @@
+.page { min-height: 100vh; background: #f9fafb; }
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header h1 { font-size: 1.5rem; font-weight: 700; color: #667eea; }
+
+.headerRight { display: flex; align-items: center; gap: 1rem; }
+.uid { color: #9ca3af; font-size: 0.8rem; font-family: monospace; }
+
+.logoutBtn {
+  padding: 0.4rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+.logoutBtn:hover { border-color: #ef4444; color: #ef4444; }
+
+.main { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.toolbar h2 { font-size: 1.25rem; font-weight: 600; }
+
+.newBtn {
+  padding: 0.5rem 1.25rem;
+  background: #667eea;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+.newBtn:hover { background: #5a67d8; }
+
+.state    { color: #6b7280; text-align: center; padding: 3rem 0; }
+.stateErr { color: #ef4444; text-align: center; padding: 3rem 0; }
+
+.empty { text-align: center; padding: 4rem 0; color: #9ca3af; }
+.empty a { color: #667eea; text-decoration: none; font-weight: 600; }
+
+.list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.row {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.row:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: #667eea; }
+
+.rowMain { display: flex; flex-direction: column; gap: 0.25rem; }
+.desc { font-weight: 600; font-size: 0.95rem; }
+.category { font-size: 0.8rem; color: #9ca3af; }
+
+.rowMeta { display: flex; align-items: center; gap: 1rem; }
+.amount { font-weight: 700; font-size: 1rem; color: #1f2937; }
+.date   { font-size: 0.8rem; color: #9ca3af; }
+
+.badge {
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
