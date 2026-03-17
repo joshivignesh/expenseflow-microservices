@@ -1,0 +1,69 @@
+# =============================================================================
+# docker-compose.observability.yml
+# Optional observability stack — merge with:
+#   docker-compose -f docker-compose.yml -f docker-compose.observability.yml up
+#
+# Services:
+#   otel-collector — receives OTLP traces from all services, exports to Jaeger
+#   jaeger         — distributed trace viewer  → http://localhost:16686
+#   prometheus     — metrics scraper           → http://localhost:9090
+#   grafana        — dashboards                → http://localhost:3001
+# =============================================================================
+
+version: '3.9'
+
+services:
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: expenseflow-otel-collector
+    volumes:
+      - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    networks:
+      - expenseflow-network
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: expenseflow-jaeger
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "14250:14250"   # Jaeger gRPC
+    networks:
+      - expenseflow-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: expenseflow-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - expenseflow-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: expenseflow-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - expenseflow-network
+    depends_on:
+      - prometheus
+
+volumes:
+  grafana-data:
+
+networks:
+  expenseflow-network:
+    external: true

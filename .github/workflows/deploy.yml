@@ -1,0 +1,155 @@
+name: Build, Push & Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/expenseflow
+
+jobs:
+  # ============================================================
+  # Job 1 — Build & push Docker images to GitHub Container Registry
+  # ============================================================
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      # Build and push Identity Service
+      - name: Build & Push Identity Service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/services/ExpenseFlow.Identity/ExpenseFlow.Identity.API/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-identity:latest
+            ${{ env.IMAGE_PREFIX }}-identity:${{ steps.meta.outputs.tag }}
+
+      # Build and push Expense Service
+      - name: Build & Push Expense Service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/services/ExpenseFlow.Expense/ExpenseFlow.Expense.API/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-expense:latest
+            ${{ env.IMAGE_PREFIX }}-expense:${{ steps.meta.outputs.tag }}
+
+      # Build and push Gateway
+      - name: Build & Push Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/gateway/ExpenseFlow.Gateway/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-gateway:latest
+            ${{ env.IMAGE_PREFIX }}-gateway:${{ steps.meta.outputs.tag }}
+
+      # Build and push Frontend
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: src/frontend
+          file: src/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-frontend:latest
+            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.meta.outputs.tag }}
+
+  # ============================================================
+  # Job 2 — Deploy to Azure Container Apps
+  # Requires secrets: AZURE_CREDENTIALS, SQL_SA_PASSWORD, JWT_SECRET_KEY
+  # Set these in GitHub → Settings → Secrets and variables → Actions
+  # ============================================================
+  deploy:
+    name: Deploy to Azure Container Apps
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      # Deploy Identity Service
+      - name: Deploy Identity Service
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          containerAppName: expenseflow-identity
+          resourceGroup:    expenseflow-rg
+          imageToDeploy:    ${{ env.IMAGE_PREFIX }}-identity:${{ steps.meta.outputs.tag }}
+          environmentVariables: >
+            ASPNETCORE_ENVIRONMENT=Production
+            JwtSettings__SecretKey=${{ secrets.JWT_SECRET_KEY }}
+            JwtSettings__Issuer=ExpenseFlow.Identity
+            JwtSettings__Audience=ExpenseFlow.Client
+            JwtSettings__ExpiryMinutes=15
+            ConnectionStrings__IdentityDb=${{ secrets.IDENTITY_DB_CONNECTION }}
+
+      # Deploy Expense Service
+      - name: Deploy Expense Service
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          containerAppName: expenseflow-expense
+          resourceGroup:    expenseflow-rg
+          imageToDeploy:    ${{ env.IMAGE_PREFIX }}-expense:${{ steps.meta.outputs.tag }}
+          environmentVariables: >
+            ASPNETCORE_ENVIRONMENT=Production
+            JwtSettings__SecretKey=${{ secrets.JWT_SECRET_KEY }}
+            JwtSettings__Issuer=ExpenseFlow.Identity
+            JwtSettings__Audience=ExpenseFlow.Client
+            ConnectionStrings__ExpenseDb=${{ secrets.EXPENSE_DB_CONNECTION }}
+
+      # Deploy Gateway
+      - name: Deploy Gateway
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          containerAppName: expenseflow-gateway
+          resourceGroup:    expenseflow-rg
+          imageToDeploy:    ${{ env.IMAGE_PREFIX }}-gateway:${{ steps.meta.outputs.tag }}
+          environmentVariables: >
+            ASPNETCORE_ENVIRONMENT=Production
+            JwtSettings__SecretKey=${{ secrets.JWT_SECRET_KEY }}
+            JwtSettings__Issuer=ExpenseFlow.Identity
+            JwtSettings__Audience=ExpenseFlow.Client
+
+      # Deploy Frontend
+      - name: Deploy Frontend
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          containerAppName: expenseflow-frontend
+          resourceGroup:    expenseflow-rg
+          imageToDeploy:    ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.meta.outputs.tag }}

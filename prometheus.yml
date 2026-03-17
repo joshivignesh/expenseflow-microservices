@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: expenseflow-identity
+    static_configs:
+      - targets: ['identity-service:8080']
+    metrics_path: /metrics
+
+  - job_name: expenseflow-expense
+    static_configs:
+      - targets: ['expense-service:8080']
+    metrics_path: /metrics
+
+  - job_name: expenseflow-gateway
+    static_configs:
+      - targets: ['gateway:8080']
+    metrics_path: /metrics
