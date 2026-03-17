@@ -3,13 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { authApi, LoginRequest, RegisterRequest } from '../api/authApi'
 import { useAuthStore } from '../store/authStore'
 
-/**
- * Login mutation — Sonnet (brain 🧠) orchestrates the post-login flow:
- * store tokens, redirect to dashboard.
- */
 export function useLogin() {
-  const setAuth   = useAuthStore((s) => s.setAuth)
-  const navigate  = useNavigate()
+  const setAuth  = useAuthStore((s) => s.setAuth)
+  const navigate = useNavigate()
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
@@ -20,9 +16,6 @@ export function useLogin() {
   })
 }
 
-/**
- * Register mutation — same flow as login on success.
- */
 export function useRegister() {
   const setAuth  = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()

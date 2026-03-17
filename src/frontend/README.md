@@ -61,10 +61,6 @@ Axios request interceptor reads `useAuthStore.getState().accessToken` on every r
 ### Route Guards
 `PrivateRoute` checks `useAuthStore` for `accessToken`. If absent, `<Navigate to="/login" replace />` redirects before rendering the protected page. Zustand's `persist` middleware means the check works correctly across page refreshes.
 
-### Model Assignment
-- **Sonnet** 🧠 — `useLogin`/`useRegister` orchestrate post-auth flow (store tokens, navigate)
-- **Haiku** 💓 — health polling, lightweight status classification in `GatewayLoggingMiddleware`
-
 ## Production Deployment (Docker)
 
 Two-stage Dockerfile:

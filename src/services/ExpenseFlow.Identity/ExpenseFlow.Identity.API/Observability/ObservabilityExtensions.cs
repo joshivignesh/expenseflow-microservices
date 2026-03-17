@@ -10,14 +10,9 @@ namespace ExpenseFlow.Identity.API.Observability;
 
 /// <summary>
 /// Wires up the full observability stack for the Identity Service:
-///   - Serilog  : structured JSON logging → stdout (picked up by Docker/cloud)
-///   - OpenTelemetry : distributed tracing (OTLP export) + metrics (Prometheus)
-///   - Health checks : /health endpoint polled by YARP and orchestrators
-///
-/// Model assignment:
-///   Haiku  💓 — health check polling (lightweight, frequent)
-///   Sonnet 🧠 — log routing decisions, OTLP trace correlation
-///   Opus   🏋️ — future: AI-powered anomaly detection on metrics
+///   - Serilog         : structured JSON logging → stdout
+///   - OpenTelemetry   : distributed tracing (OTLP) + metrics (Prometheus)
+///   - Health checks   : /health endpoint polled by YARP and orchestrators
 /// </summary>
 public static class ObservabilityExtensions
 {
@@ -43,8 +38,7 @@ public static class ObservabilityExtensions
 
         builder.Services.AddOpenTelemetry()
             .ConfigureResource(r => r
-                .AddService("ExpenseFlow.Identity",
-                    serviceVersion: "1.0.0"))
+                .AddService("ExpenseFlow.Identity", serviceVersion: "1.0.0"))
             .WithTracing(t => t
                 .AddAspNetCoreInstrumentation()
                 .AddEntityFrameworkCoreInstrumentation()
@@ -65,7 +59,6 @@ public static class ObservabilityExtensions
 
     public static WebApplication MapObservability(this WebApplication app)
     {
-        // /health  — liveness + readiness (polled by YARP, Docker, K8s)
         app.MapHealthChecks("/health", new HealthCheckOptions
         {
             ResponseWriter = async (ctx, report) =>
@@ -86,9 +79,7 @@ public static class ObservabilityExtensions
             }
         });
 
-        // /metrics — Prometheus scrape endpoint
         app.MapPrometheusScrapingEndpoint("/metrics");
-
         return app;
     }
 }

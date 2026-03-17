@@ -60,13 +60,3 @@ The two services share a SQL Server host in development but use **separate datab
 - `ExpenseFlowExpenseDb` — owned by Expense Service
 
 No cross-database queries. The Expense Service stores `SubmittedByUserId` as a plain `Guid` — it does not join to the Identity database to resolve user details. This preserves the microservice boundary. In a production multi-team setup, these would be separate Azure SQL instances.
-
-## AI Model Strategy
-
-| Model | Claude ID | Role in system |
-|---|---|---|
-| Sonnet | `claude-sonnet-4-6` | Orchestration, routing, complex reasoning |
-| Haiku | `claude-haiku-4-5-20251001` | Health heartbeat, lightweight classification |
-| Opus | `claude-opus-4-6` | Heavy analysis, anomaly detection, reports |
-
-This tiered approach balances cost and capability — not every request needs the most powerful model.

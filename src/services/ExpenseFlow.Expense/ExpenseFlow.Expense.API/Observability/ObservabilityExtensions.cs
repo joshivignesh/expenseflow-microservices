@@ -9,8 +9,10 @@ using ExpenseFlow.Expense.API.HealthChecks;
 namespace ExpenseFlow.Expense.API.Observability;
 
 /// <summary>
-/// Full observability stack for the Expense Service.
-/// Identical pattern to Identity — Serilog + OpenTelemetry + Health Checks.
+/// Wires up the full observability stack for the Expense Service:
+///   - Serilog         : structured JSON logging → stdout
+///   - OpenTelemetry   : distributed tracing (OTLP) + metrics (Prometheus)
+///   - Health checks   : /health endpoint polled by YARP and orchestrators
 /// </summary>
 public static class ObservabilityExtensions
 {

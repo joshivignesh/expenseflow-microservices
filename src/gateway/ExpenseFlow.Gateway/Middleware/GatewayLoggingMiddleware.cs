@@ -4,7 +4,6 @@ namespace ExpenseFlow.Gateway.Middleware;
 
 /// <summary>
 /// Logs every inbound request and outbound response at the gateway boundary.
-/// Uses Haiku for lightweight structured log enrichment — fast, cheap, no latency cost.
 ///
 /// Captures:
 ///   - Method, Path, StatusCode, Duration (ms)

@@ -5,8 +5,7 @@ using ExpenseFlow.Identity.Infrastructure.Persistence;
 namespace ExpenseFlow.Identity.API.HealthChecks;
 
 /// <summary>
-/// Custom health check — verifies the Identity database is reachable.
-/// Uses Haiku (💓) for lightweight, fast, low-latency polling.
+/// Verifies the Identity database is reachable.
 /// Exposed at GET /health — polled by YARP and docker-compose healthcheck.
 /// </summary>
 public sealed class IdentityHealthCheck : IHealthCheck

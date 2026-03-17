@@ -5,8 +5,8 @@ using ExpenseFlow.Expense.Infrastructure.Persistence;
 namespace ExpenseFlow.Expense.API.HealthChecks;
 
 /// <summary>
-/// Custom health check — verifies the Expense database is reachable.
-/// Uses Haiku (💓) — lightweight heartbeat polling by YARP every 10s.
+/// Verifies the Expense database is reachable.
+/// Exposed at GET /health — polled by YARP every 10 seconds.
 /// </summary>
 public sealed class ExpenseHealthCheck : IHealthCheck
 {

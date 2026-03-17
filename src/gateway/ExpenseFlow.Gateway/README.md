@@ -58,7 +58,3 @@ Slow requests (>1000ms) are logged as `Warning` — alerting on this threshold c
 ## Active Health Checks
 
 YARP polls `/health` on each downstream service every 10 seconds. After 3 consecutive failures, YARP stops routing to that destination. When health recovers, routing resumes automatically. No manual intervention required.
-
-## Model Assignment (Haiku 💓)
-
-`GatewayLoggingMiddleware` is the heartbeat of the system — runs on every single request. In a production AI-assisted gateway, `claude-haiku-4-5-20251001` would handle fast, cheap per-request classification or log enrichment without adding latency.
